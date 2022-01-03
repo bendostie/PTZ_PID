@@ -1,7 +1,13 @@
 import cv2
             
 def draw_points(frame, point_sets, type = 'box'):
-
+    """
+    Draws bounding boxes and facial landmarks on frame
+    :param frame: camera frame or image to be modified
+    :param point_sets: list of bounding box and landmark coordinates
+    :param type: box or face. Indicates if list contains landmarks
+    
+    """
     for point_set in point_sets:
         bounding_box = point_set['box']
         

@@ -5,9 +5,26 @@ from collections import deque
 
 
 class CostBasedTracker:
+    """
+    Tracks an object over several frames.
+    Generates cost between a history of a tracked object and current
+    proposals. The lowest cost proposal is assumed to be the object 
+    and added to the history.
+    
+    """
     def __init__(self, loc_history_len):
+        """
+        New object tracker
+        :param loc_history_len: Maximum length of the track history
+        """
         self.location_history = deque(maxlen=loc_history_len)
     def location_prediction(self, lost_track_frames):
+        """
+        Predicts the location of the tracked object by taking the 
+        derivative over the history and projecting into future.
+        :param lost_track_frames: number of frames the object has not 
+        been seen
+        """
         delta_y = 0
         delta_x = 0
         delta_w = 0
@@ -29,6 +46,14 @@ class CostBasedTracker:
         return (pred_x, pred_y), pred_w, pred_h
         
     def iou_cost(self, point_sets, lost_track_frames):
+        """
+        Calculates the intersection over union cost. Proposal with the 
+        most overlap with bounding box prediction from location 
+        prediction.
+        :param point_sets: bounding box coords of all proposals
+        :param lost_track_frames: number of frames the object has not 
+        been seen
+        """
         #a,b for upper left corner, c,d for lower right corner
         pred_x, pred_y, pred_w, pred_h = self.location_prediction(lost_track_frames)
         a = pred_x
@@ -53,7 +78,14 @@ class CostBasedTracker:
 
 
     def location_cost(self, point_sets, lost_track_frames):
-        
+        """
+        Calculates cost between all proposals and history based on 
+        location prediction. The poposal closest to the predicted 
+        location will have the lowest cost.
+        :param point_sets: bounding box coords of all proposals
+        :param lost_track_frames: number of frames the object has not 
+        been seen
+        """
             
             
         (pred_x, pred_y), pred_w, pred_h = self.location_prediction(lost_track_frames)
@@ -64,10 +96,22 @@ class CostBasedTracker:
             
         return bb_costs
     def xy_error(self, bounding_box, x, y):
+        """
+        Calculates xy error between two bounding boxes
+        :param bounding_box: bounding box coords
+        :param x: x coord to compare to bounding box
+        :param y: y coord to compare to bounding box        
+        """
         (x, y, w, h) = bounding_box
         return (abs(x - x) + abs(y - y))
 
     def find_track(self, point_sets, x, y):
+        """
+        Finds nearest detected object to x,y coord
+        :param point_sets: bounding box coords of all detections
+        :param x: x coord to compare to bounding boxes
+        :param y: y coord to compare to bounding boxes
+        """
         if len(point_sets) > 0:
             closest_track = point_sets[0]['box'] 
             smallest_error = self.xy_error(point_sets[0]['box'], x, y)

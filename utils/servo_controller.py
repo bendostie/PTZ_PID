@@ -5,10 +5,15 @@ from adafruit_servokit import ServoKit
 
 
 class SimpleServoControl:
+    """ proportional controller for adafruit servo kit"""
     def __init__(self, width, height):
+        """
+        New proportional controller 
+        :param width: width of camera frames
+        :param height: height of camera frames
+        :return: none
+        """
         self.kit = ServoKit(channels=16)
-
-
         self.pan = 90
         self.tilt = 90
         self.kit.servo[0].angle = self.tilt
@@ -16,6 +21,11 @@ class SimpleServoControl:
         self.WIDTH = width
         self.HEIGHT = height
     def follow(self, box):
+        """
+        Moves camera to indicated pixel coordinates
+        :param box: bounding box to follow in x,y,h,w format
+        :return: none
+        """
         x, y, w, h = box
         center_x = x + w/2
         center_y = y + h/2
