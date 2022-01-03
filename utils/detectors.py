@@ -7,8 +7,17 @@ from numpy.lib.utils import byte_bounds
 
 
 class ColorDetector:
-    def __init__(self, height, width, threshold) -> None:
+    """
+    Detect a bounding box around a thresholded HSV selection 
+    """
+    def __init__(self, height, width, threshold = 50) -> None:
+        """
+        New instance of color based detector
 
+        :param width: width of frames
+        :param height: height of frames
+        :param threshold: minimum size of pixel group
+        """
 
         self.lower_bound_1 = 0
         self.upper_bound_1 = 0
@@ -35,6 +44,9 @@ class ColorDetector:
         pass
 
     def update_trackbars(self):
+        """
+        Polls trackbars for updates and sets new bounds
+        """
         hue_lower_1 = cv2.getTrackbarPos('HueLow', 'Trackbars')
         hue_upper_1 = cv2.getTrackbarPos('HueHigh', 'Trackbars')
         hue_lower_2 = cv2.getTrackbarPos('HueLow2', 'Trackbars')
@@ -49,8 +61,13 @@ class ColorDetector:
         self.lower_bound_2 = np.array([hue_lower_2,saturation_lower,value_lower])
         self.upper_bound_2 = np.array([hue_upper_2,saturation_upper ,value_upper])
         
-    def create_boxes(self, frame, display = True):
-
+    def detect(self, frame, display = True):
+        """
+        Creates bounding boxes around groups of pixels that fall within the color threshold
+        :param frame: camera frame or image
+        :param display: If true it shows each frame in a cv2 window with bounding boxes overlaid
+        :return: returns list of bounding boxes in center, w, h format
+        """
         self.update_trackbars()
         hsv=cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     
@@ -95,8 +112,19 @@ class ColorDetector:
     def assign_detection(self, frame, x, y):
         #target_color = frame[y, x]
         pass
+
+
+
 class FaceCascadeDetector:
+    """
+    Detects faces using cv2/intel haar cascades
+    """
     def __init__(self, width, height) -> None:
+        """
+        New instance of haar cascade face detector
+        :param width: width of frames
+        :param height: height of frames
+        """
         self.face_det = CascadeDetector('cascades/haarcascade_frontalface_default.xml')
         self.r_eye_det = CascadeDetector('cascades/haarcascade_righteye_2splits.xml')
         self.l_eye_det = CascadeDetector('cascades/haarcascade_lefteye_2splits.xml')

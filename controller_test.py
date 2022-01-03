@@ -1,13 +1,20 @@
+"""
+File for testing PID controller and setting parameters
+Creates a fake bounding box for the camera to track
+Bounding box is adjustable through trackbars
+Benjamin Dostie 2022
+"""
+
 import cv2
-from VISCA_controller import controller
+from utils.VISCA_controller import controller
 
 
 SIZE_THRESHOLD = 50
 DISPLAY_WIDTH = 640
 DISPLAY_HEIGHT = 480
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(1)
 
-
+# trackbars for moving test bounding box
 def nothing(x):
     pass
 cv2.namedWindow('web_cam')
@@ -20,7 +27,6 @@ test_controller = controller(DISPLAY_WIDTH, DISPLAY_HEIGHT)
 
 
 while True:
-    #camera
     _, frame = cam.read()
     frame = cv2.resize(frame, (DISPLAY_WIDTH, DISPLAY_HEIGHT))
     

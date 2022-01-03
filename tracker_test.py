@@ -1,12 +1,19 @@
+"""
+File for testing detector, tracker, and controller with real example
+Set for VISCA
+Benjamin Dostie 2022
+"""
+
+
 import cv2
 import numpy as np
-from trackers import CostBasedTracker
-from detectors import OpenCVDNNDetector
-from display import draw_points
+from utils.trackers import CostBasedTracker
+from utils.detectors import ColorDetector
+from utils.display import draw_points
 from numpy.core.fromnumeric import argmin
 
-#detection bounding box size threshold
-SIZE_THRESHOLD = 50
+
+SIZE_THRESHOLD = 50 #detection bounding box size threshold
 DISPLAY_WIDTH = 640
 DISPLAY_HEIGHT = 480
 cam = cv2.VideoCapture(0)
@@ -15,26 +22,27 @@ cam.set(4, DISPLAY_HEIGHT)
 
 
 
-detector = OpenCVDNNDetector(DISPLAY_WIDTH, DISPLAY_HEIGHT)
+detector = ColorDetector(DISPLAY_WIDTH, DISPLAY_HEIGHT)
 tracker = CostBasedTracker(5)
 lost_track_frames = 0
 tracking = False
 
 
 def click(event, x, y, flags, params):
+    """
+    Checks for click event to set track and 
+    """
     global tracking
-    
- 
-    
-    
     if event == cv2.EVENT_LBUTTONDOWN:
         _, frame = cam.read()
         bounding_boxes = detector.detect(frame)
-        tracking = tracker.find_track(bounding_boxes, x, y)
+        #find bounding box nearest click event:
+        tracking = tracker.find_track(bounding_boxes, x, y) 
 
-    if event == cv2.EVENT_RBUTTONDOWN:
-        _, frame = cam.read()
-        detector.assign_detection(frame, x, y)
+    #not functioning
+    #if event == cv2.EVENT_RBUTTONDOWN:
+    #    _, frame = cam.read()
+    #    detector.assign_detection(frame, x, y)
         
         
 cv2.namedWindow('web_cam')
