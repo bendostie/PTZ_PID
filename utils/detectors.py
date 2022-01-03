@@ -7,12 +7,9 @@ from numpy.lib.utils import byte_bounds
 
 
 class ColorDetector:
-    """
-    Detect a bounding box around a thresholded HSV selection 
-    """
+    """Detect a bounding box around a thresholded HSV selection"""
     def __init__(self, height, width, threshold = 50) -> None:
-        """
-        New instance of color based detector
+        """New instance of color based detector
 
         :param width: width of frames
         :param height: height of frames
@@ -44,9 +41,7 @@ class ColorDetector:
         pass
 
     def update_trackbars(self):
-        """
-        Polls trackbars for updates and sets new bounds
-        """
+        """Polls trackbars for updates and sets new bounds"""
         hue_lower_1 = cv2.getTrackbarPos('HueLow', 'Trackbars')
         hue_upper_1 = cv2.getTrackbarPos('HueHigh', 'Trackbars')
         hue_lower_2 = cv2.getTrackbarPos('HueLow2', 'Trackbars')

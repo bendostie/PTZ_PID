@@ -7,7 +7,22 @@ import numpy as np
 
 
 class controller:
+    """
+    PID controller for VISCA over IP camera
+    """
     def __init__(self, width, height) -> None:
+        """
+        new controller instance
+        :param width: width of input frame
+        :type width: int
+        :param height: height of input frame
+        :type height: int
+        :return:
+        :rtype: None
+        """
+
+
+        #fix: needs to load parameters from file
         self.WIDTH = width
         self.HEIGHT = height
         self.ip_address = '192.168.10.97'
@@ -15,23 +30,23 @@ class controller:
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
         self.connection.connect((self.ip_address, self.port_number))
 
-        #target values
+        #target values in pixel coordinates
         self.target_x = 250 #int(width/2)
         self.target_y = 250 #int(height/2)
         self.target_z = 100 #int(width/12)
         
 
-        #motor saturation for integral
+        #motor saturation for integral, stops summing if saturated
         self.x_unsaturated = True
         self.y_unsaturated = True
         self.z_unsaturated = True
 
-        #error sum for integral
+        #running sum of the error (integral)
         self.x_error_sum = 0
         self.y_error_sum = 0
         self.z_error_sum = 0
 
-        #error history for derivative
+        #history of the error (derivative)  length defined by self._length
         self.x_error_history = np.array([0,0])
         self.y_error_history = np.array([0,0])
         self.z_error_history = np.array([0,0])
@@ -39,19 +54,23 @@ class controller:
 
 
         #acceptable exponents to control proportion equation
+        #exponents are used to adjust response of the proportional error
         self.shape_list = [0.6, 0.76, 1, 1.32, 1.96, 2.2, 3, 5, 7, 21, 81]
 
         #pan/tilt parameters initial values
-        self.p_gain = 0.4
-        self.p_slope = 1.0
-        self.p_shape = 6
-        self.i_gain = 0
-        self.d_gain = 0
-        self.d_noise_reduction = 1
+        self.p_gain = 0.4 #contribution of p component to total error
+        self.p_slope = 1.0 # slope of proportional error response
+        self.p_shape = 6 # index of shape for proportional error
+        self.i_gain = 0 #contribution of i component to total error
+        self.d_gain = 0 #contribution of d component to total error
+        self.d_noise_reduction = 1 
         self.m_smooth = 1.0
-        self.length = 3
-        self.x_threshold = 0.2
-        self.y_threshold = 0.2
+        self.length = 3 #history length
+
+        # camera does not move unless error 
+        # error is greater than threshold
+        self.x_threshold = 0.2 
+        self.y_threshold = 0.2 
 
         #zoom parameters initial values
         self.z_p_gain = 1
@@ -72,7 +91,9 @@ class controller:
         """
         IP Setter
         :param ip: new ip address
+        :type ip: String
         :return:
+        :rtype: None
         """
         try:
             self.ip_address = ip
@@ -85,7 +106,9 @@ class controller:
         """
         Network Port Setter
         :param port: new port number
+        :type port: String
         :return:
+        :rtype: None
         """
         try:
             self.port_number = port
@@ -100,6 +123,7 @@ class controller:
         Moves camera to follow a bounding box in the frame.
         :param box: tuple containing box upper left corner x, y, width, and height
         :return:
+        :rtype: None
         """
 
         #calculate difference between target and bounding box
@@ -143,6 +167,7 @@ class controller:
         :param y_error: magnitude of movement on the y plain clamped between -1 and 1
         :param z_error: magnitude of zoom clamped between -1 and 1
         :return:
+        :rtype: None
         """
         #clamp error to -1 and 1 and alert of motor saturation for integral
         if abs(x_error) > 1:
@@ -175,7 +200,7 @@ class controller:
         zoom_header = '81010407'
         zoom_speed = '00ff'
 
-
+        #get magnitiude and direction in hex for x and y
         if x_error > self.x_threshold:
             pan_speed = str(int(x_error * 24)).zfill(2)
             pan_direction = '02'
@@ -194,6 +219,7 @@ class controller:
         + pan_direction + tilt_direction)
         self.send_command(command)
 
+        #get magnitude and direction in hex for zoom
         if z_error > self.z_threshold:
             zoom_speed = '2{}ff'.format(str(int(z_error * 7)))
         elif z_error < 0 - self.z_threshold:
@@ -202,7 +228,13 @@ class controller:
         self.send_command(zoom_command)
         
     def send_command(self, command):
-        
+        """
+        Sends VISCA hex command to camera
+        :param command: hex code to send to camera
+        :type command: String
+        :return:
+        :rtype: None
+        """
         try:
             data = bytes.fromhex(command)
             self.connection.send(data)
@@ -221,7 +253,8 @@ class controller:
         and bounding box width between -1 and 1
         :return: proportional error for x, y, and zoom between -1 and 1
         """
-        
+        #proportional error calculated as slope/10 x^shape
+        #error is clamped between 1 and -1
         px = max(-1.0, min(1.0, (self.p_slope/10) * x_error**self.shape_list[self.p_shape]))
         py = max(-1.0, min(1.0, (self.p_slope/10) * y_error**self.shape_list[self.p_shape]))
         pz = max(-1.0, min(1.0, (self.z_p_slope/10) * z_error**self.shape_list[self.z_p_shape]))
@@ -244,7 +277,7 @@ class controller:
         and bounding box width between -1 and 1
         :return: integral error
         """
-        
+        # does not accumulate if motor is saturated (at max speed)
         self.x_error_sum += x_error * self.x_unsaturated
         self.y_error_sum += y_error * self.y_unsaturated
         self.z_error_sum += z_error * self.z_unsaturated
