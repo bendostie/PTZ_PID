@@ -96,13 +96,12 @@ class ColorDetector:
         for contour in contours:
             area = cv2.contourArea(contour)
             if area >= self.THRESHOLD:
-
                 (x,y,w,h) = cv2.boundingRect(contour)
-                
                 center = (x+w/2, y+h/2)
-                
-                bounding_boxes.append((center, w, h))
-            
+                bounding_boxes.append({
+                    'box': [int(x), int(y), int(w), int(h)],
+                    'center': center
+                })
         return bounding_boxes
     def assign_detection(self, frame, x, y):
         #target_color = frame[y, x]
